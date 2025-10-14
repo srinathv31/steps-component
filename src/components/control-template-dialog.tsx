@@ -145,11 +145,23 @@ export function ControlTemplateDialog({
           </div>
 
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
+            <div className="flex items-start justify-between gap-2">
               <Label>Select Controls</Label>
-              <Badge variant="secondary">
-                {selectedControls.length} selected
-              </Badge>
+              <div className="flex flex-wrap gap-1.5 justify-end max-w-md">
+                {selectedControls.length === 0 ? (
+                  <Badge variant="secondary">None selected</Badge>
+                ) : selectedControls.length <= 5 ? (
+                  selectedControls.map((control) => (
+                    <Badge key={control.control_id} variant="secondary">
+                      {control.control_type}
+                    </Badge>
+                  ))
+                ) : (
+                  <Badge variant="secondary">
+                    {selectedControls.length} selected
+                  </Badge>
+                )}
+              </div>
             </div>
             <ScrollArea className="h-64 rounded-md border p-4">
               <div className="space-y-3">
