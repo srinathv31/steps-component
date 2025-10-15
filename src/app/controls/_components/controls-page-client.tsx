@@ -8,7 +8,18 @@ import { ControlTemplateDialog } from "@/components/control-template-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Plus, Search } from "lucide-react";
+import { toast } from "sonner";
 import {
   createTemplateAction,
   updateTemplateAction,
@@ -41,6 +52,8 @@ export function ControlsPageClient({
     "create"
   );
   const [searchQuery, setSearchQuery] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [templateToDelete, setTemplateToDelete] = useState<number | null>(null);
 
   // Get unique process names for tabs
   const processNames = Array.from(
@@ -76,14 +89,23 @@ export function ControlsPageClient({
   };
 
   const handleDelete = (templateId: number) => {
-    if (confirm("Are you sure you want to delete this template?")) {
-      startTransition(async () => {
-        const result = await deleteTemplateAction(templateId);
-        if (!result.success) {
-          alert(result.error || "Failed to delete template");
-        }
-      });
-    }
+    setTemplateToDelete(templateId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = () => {
+    if (templateToDelete === null) return;
+
+    startTransition(async () => {
+      const result = await deleteTemplateAction(templateToDelete);
+      if (!result.success) {
+        toast.error(result.error || "Failed to delete template");
+      } else {
+        toast.success("Template deleted successfully");
+      }
+      setDeleteDialogOpen(false);
+      setTemplateToDelete(null);
+    });
   };
 
   const handleSave = async (
@@ -112,8 +134,9 @@ export function ControlsPageClient({
       if (result.success) {
         setDialogOpen(false);
         setEditingTemplate(null);
+        toast.success("Template saved successfully");
       } else {
-        alert(result.error || "Failed to save template");
+        toast.error(result.error || "Failed to save template");
       }
     });
   };
@@ -293,6 +316,29 @@ export function ControlsPageClient({
         controls={controls}
         isPending={isPending}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the
+              template and remove it from the system.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isPending}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmDelete}
+              disabled={isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
