@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Control, ControlTemplate } from "@/types/control-template";
-import { mockControls } from "@/data/mock-controls";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +25,8 @@ interface ControlTemplateDialogProps {
   ) => void;
   editingTemplate?: ControlTemplate | null;
   mode: "create" | "edit" | "version";
+  controls: Control[];
+  isPending?: boolean;
 }
 
 export function ControlTemplateDialog({
@@ -34,6 +35,8 @@ export function ControlTemplateDialog({
   onSave,
   editingTemplate,
   mode,
+  controls,
+  isPending = false,
 }: ControlTemplateDialogProps) {
   const [processName, setProcessName] = useState("");
   const [version, setVersion] = useState("");
@@ -165,7 +168,7 @@ export function ControlTemplateDialog({
             </div>
             <ScrollArea className="h-64 rounded-md border p-4">
               <div className="space-y-3">
-                {mockControls.map((control) => (
+                {controls.map((control) => (
                   <div
                     key={control.control_id}
                     className="flex items-start space-x-3 p-3 rounded-lg hover:bg-muted/50 transition-colors cursor-pointer"
@@ -196,7 +199,11 @@ export function ControlTemplateDialog({
         </div>
 
         <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isPending}
+          >
             Cancel
           </Button>
           <Button
@@ -204,10 +211,15 @@ export function ControlTemplateDialog({
             disabled={
               !processName.trim() ||
               !version.trim() ||
-              selectedControls.length === 0
+              selectedControls.length === 0 ||
+              isPending
             }
           >
-            {mode === "edit" ? "Save Changes" : "Create Template"}
+            {isPending
+              ? "Saving..."
+              : mode === "edit"
+              ? "Save Changes"
+              : "Create Template"}
           </Button>
         </DialogFooter>
       </DialogContent>
